@@ -1,0 +1,8 @@
+| The long options | The short options | Type/Range             | Description |
+|------------------+-------------------+------------------------+-------------|
+| --help           | h                 | Boolean                |             |
+| --version        | v                 | Boolean                |             |
+| --out-imagefile  | o                 | String                 |             |
+| --out-inifile    | i                 | String                 |             |
+| --out-iniconf    | c                 | String                 |             |
+| --max-width      | w                 | Uint32/[1..4294967295] |             |

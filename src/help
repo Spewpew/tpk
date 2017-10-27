@@ -1,0 +1,38 @@
+Usage:$ %s options [imageid1] filepath1 [imageidN] filepathN [] options
+Example: %s --max-width=512 w=1024 --log-loaded l --out-image=out.png o=overout.png --out-ini=out.ini i=over.ini [hello_sprite_id_1] hellosprite.png overridehello.png [hello_sprite_id_2] hisprite.png [] w=2048 --in-conf=read_as_cmd_params.ini
++---------------+-------+---------------+-------------+
+|  The long     |  The  |               |             |
+|  options      | short |  Type/Range   |Description  |
+|               |options|               |             |
++---------------+-------+---------------+-------------+
+|    --help     |   h   |    Boolean    | Show this   |
+|               |       |               |   help.     |
++---------------+-------+---------------+-------------+
+|   --version   |   v   |    Boolean    |Show version |
++---------------+-------+---------------+-------------+
+|               |       |               |   Log the   |
+| --log-loaded  |   l   |    Boolean    |loaded images|
+|               |       |               |  and their  |
+|               |       |               |   sizes.    |
++---------------+-------+---------------+-------------+
+|               |       |               | The path to |
+|  --out-image  |   o   |    String     |  save the   |
+|               |       |               |  resulting  |
+|               |       |               |   image.    |
++---------------+-------+---------------+-------------+
+|               |       |               |The path to  |
+|   --out-ini   |   i   |    String     |  save the   |
+|               |       |               | resulting   |
+|               |       |               | INI file.   |
++---------------+-------+---------------+-------------+
+|               |       |               |The path of  |
+|   --in-conf   |   c   |    String     |the INI      |
+|               |       |               |configuration|
+|               |       |               |file.        |
++---------------+-------+---------------+-------------+
+|               |       |               |Maximum      |
+|               |       |   Uint32 /    |allowable    |
+|  --max-width  |   w   |[1..4294967295]|width of the |
+|               |       |               |resulting    |
+|               |       |               |image.       |
++---------------+-------+---------------+-------------+
