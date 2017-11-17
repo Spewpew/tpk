@@ -1224,7 +1224,7 @@ sub loestack_compose_definitions($$$){
 	if(__builtin_mul_overflow(sizeof(${$t->{array}}[0]),start_queue_length,&rsz) ||
 		__builtin_add_overflow(sizeof(struct $prefix),rsz,&rsz)){
 		LOE_STACK_LOG_OVERFLOW_ERROR;
-		return !!0;
+		return NULL;
 	}
 	s=LOE_STACK_MALLOC(rsz);
 	if(!s){
@@ -1241,7 +1241,7 @@ sub loestack_compose_definitions($$$){
 	struct $prefix*s;
 	size_t rsz;
 	if(__builtin_mul_overflow(sizeof(${$t->{array}}[0]),start_queue_length,&rsz) ||
-		__builtin_add_overflow(sizeof(*s),rsz,&rsz)){
+		__builtin_add_overflow(sizeof(struct $prefix),rsz,&rsz)){
 		LOE_STACK_LOG_OVERFLOW_ERROR;
 		return !!0;
 	}
@@ -1443,11 +1443,17 @@ sub loelist_compose_definitions($$$){
 		$t->{index_type} nm= $que;
 		do{
 			if(__builtin_mul_overflow(nm,2,&nm)){
-				nm= -1<0?(1<<(sizeof(nm)*8-2))-1+(1<<(sizeof(nm)*8-2)):-1;
+				nm= -1<0?((typeof(nm))1<<(sizeof(nm)*8-2))-1+((typeof(nm))1<<(sizeof(nm)*8-2)):-1;
 				break;
 			}
 		}while(nl>nm);
-		struct $prefix*ns=LOE_STACK_REALLOC(ps[0],sizeof(*ns)+sizeof(${$t->{array}}[0])*nm);
+		size_t rsz;
+		if(__builtin_mul_overflow(nm,sizeof(${$t->{array}}[0]),&rsz) ||
+			__builtin_add_overflow(rsz,sizeof(struct $prefix),&rsz)){
+			LOE_STACK_LOG_OVERFLOW_ERROR;
+			return $prefix\_occupy_overflow_error;
+		}
+		struct $prefix*ns=LOE_STACK_REALLOC(ps[0],rsz);
 		if(!ns){
 			LOE_STACK_LOG_CRITICAL_REALLOC_ERROR;
 			return $prefix\_occupy_critical_realloc_error;
@@ -1543,12 +1549,22 @@ sub loereplace{
 	return $body;
 }
 
+sub loeeereplace{
+	my $body=shift;
+	my @records=();
+	$body=$body=~s/(^|\W)loe::eereplace\s*\(\s*$REGEXP_NESTED_BRACKETS\s*,\s*$REGEXP_NESTED_BRACKETS\s*\)\s*;/push @records,[$2,$3];""/erg;
+	for my $r (@records){
+		$body=$body=~s/${$r}[0]/${$r}[1]/eerg;
+	}
+	return $body;
+}
+
 my @dodo=(
 	{
 		regexp=>qr/--mutate=([^:]*):([^:]*)/,
 		action=>sub{
 			my ($srcf,$dstf)=($1,$2);
-			overfile($dstf,exomod('indent -sob',loereplace(loespawn(loestore(loelist(loestack(archiveworks(setarchive(setstack(setlist(iniinfo(iniworks(gperfing(slurpfile($srcf)))))))))))))));
+			overfile($dstf,exomod('indent -sob',loeeereplace(loereplace(loespawn(loestore(loelist(loestack(archiveworks(setarchive(setstack(setlist(iniinfo(iniworks(gperfing(slurpfile($srcf))))))))))))))));
 		}
 	},
 	{

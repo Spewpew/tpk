@@ -185,7 +185,8 @@ loe::stack(files){
 	struct files_record{
 		Uint32 file_id_hash;
 		struct blob*file_id,*file_path;
-		Uint32 dst_x,dst_y;
+		Uint32 dst_x;
+		Uint32 ladder_level;
 		SDL_Surface*surface;
 	} records[];
 }
@@ -647,107 +648,66 @@ struct string**ps){
 		return 0;
 	}
 	string_push(&s,'\0');
-	typeof(maxwidth) maxw;
-	levels_push(&ladder,(typeof(struct levels_record)){
-		.end_x=(maxw=pool->records[0].surface->w),
-		.end_y=pool->records[0].surface->h,
-		.floor_y=0
-	});
-	pool->records[0].dst_x=pool->records[0].dst_y=0;
-	switch(string_push_snprintf(&s,"[%s]\nx=%i\ny=%i\nw=%i\nh=%i\n",
-		pool->records[0].file_id->data,0,0,pool->records[0].surface->w,pool->records[0].surface->h)){
-		case string_push_snprintf_ok:
+	typeof(maxwidth) maxw=0;
+	typeof(pool->n_records) l=0;
+	typeof(ladder->n_records) i=0;
+	while(1){
+		switch(levels_push(&ladder,(typeof(struct levels_record)){
+			.end_x=pool->records[l].surface->w,
+			.end_y=pool->records[l].surface->h
+		})){
+			case levels_occupy_ok:{
+				break;
+			}
+			case levels_occupy_critical_realloc_error:{
+				string_free(s);
+				levels_free(ladder);
+				clog("Could not re-allocate memory to store a new level.");
+				return 0;
+			}
+			case levels_occupy_overflow_error:{
+				string_free(s);
+				levels_free(ladder);
+				clog("Overflow.");
+				return 0;
+			}
+		}
+		pool->records[l].ladder_level=i;
+		pool->records[l].dst_x=0;
+		if(maxw<pool->records[l].surface->w)
+			maxw=pool->records[l].surface->w;
+		if(++l==pool->n_records)
 			break;
-		default:{
-			elog("While creating a texture and a string with data for the INI file.");
+		i=0;
+		do{
+l_con:;		typeof(maxwidth) ex;
+			if(!__builtin_add_overflow(ladder->records[i].end_x,pool->records[l].surface->w,&ex) &&
+				ex<=maxwidth){
+				pool->records[l].ladder_level=i;
+				pool->records[l].dst_x=ladder->records[i].end_x;
+				if(maxw<(ladder->records[i].end_x=ex))
+					maxw=ex;
+				if(pool->records[l].surface->h>ladder->records[i].end_y)
+					ladder->records[i].end_y=pool->records[l].surface->h;
+				if(++l==pool->n_records)
+					goto l_break;
+				i=0;
+				goto l_con;
+			}
+		}while(++i<ladder->n_records);
+	}
+l_break:i=0;
+	typeof(maxwidth) floor_y=0;
+	do{
+		ladder->records[i].floor_y=floor_y;
+		if(__builtin_add_overflow(floor_y,ladder->records[i].end_y,&floor_y)){
+			elog("Failed to fit the images into a %"PRIu32"-by-%"PRIu32" zone.",maxwidth,typemax(typeof(maxwidth)));
 			string_free(s);
 			levels_free(ladder);
 			return 0;
 		}
-	}
-	typeof(pool->n_records) l=1;
-	while(l<pool->n_records){
-		typeof(ladder->n_records) i=0;
-		int fit=0;
-		do{
-			typeof(maxwidth) ex;
-			if(!__builtin_add_overflow(ladder->records[i].end_x,pool->records[l].surface->w,&ex) &&
-				ex<=maxwidth){
-				pool->records[l].dst_x=ladder->records[i].end_x;
-				typeof(ex) ey;
-				if(__builtin_add_overflow(ladder->records[i].floor_y,pool->records[l].surface->h,&ey)){
-					string_free(s);
-					levels_free(ladder);
-					elog("The image could not be placed due to structural limitations or inefficiency of the algorithm.");
-					return 0;
-				}
-				if(ey>ladder->records[i].end_y)
-					ladder->records[i].end_y=ey;
-				switch(string_push_snprintf(&s,"[%s]\nx=%"PRIu32"\ny=%"PRIu32"\nw=%i\nh=%i\n",
-					pool->records[l].file_id->data,pool->records[l].dst_x,
-					pool->records[l].dst_y=ladder->records[i].floor_y,
-					pool->records[l].surface->w,pool->records[l].surface->h)){
-					case string_push_snprintf_ok:{
-						if(maxw<(ladder->records[i].end_x=ex))
-							maxw=ex;
-						fit=1;
-						break;
-					}
-					default:{
-						elog("While creating a texture and a string with data for the INI file.");
-						string_free(s);
-						levels_free(ladder);
-						return 0;
-					}
-				}
-				break;
-			}
-		}while(++i<ladder->n_records);
-		if(!fit){
-			typeof(maxwidth) ey;
-			if(__builtin_add_overflow(ladder->records[i-1].end_y,pool->records[l].surface->h,&ey)){
-				string_free(s);
-				levels_free(ladder);
-				elog("The image could not be placed due to structural limitations or inefficiency of the algorithm.");
-				return 0;
-			}
-			switch(levels_push(&ladder,(typeof(struct levels_record)){
-				.end_x=pool->records[l].surface->w,
-				.end_y=ey,
-				.floor_y=ladder->records[i-1].end_y
-			})){
-				case levels_occupy_ok:{
-					switch(string_push_snprintf(&s,"[%s]\nx=%"PRIu32"\ny=%"PRIu32"\nw=%i\nh=%i\n",
-						pool->records[l].file_id->data,pool->records[l].dst_x=0,pool->records[l].dst_y=ladder->records[i].floor_y,
-						pool->records[l].surface->w,pool->records[l].surface->h)){
-						case string_push_snprintf_ok:{
-							if(maxw<pool->records[l].surface->w)
-								maxw=pool->records[l].surface->w;
-							break;
-						}
-						default:{
-							elog("While creating a texture and a string with data for the INI file.");
-							string_free(s);
-							levels_free(ladder);
-							return 0;
-						}
-					}
-					break;
-				}
-				case levels_occupy_critical_realloc_error:{
-					string_free(s);
-					levels_free(ladder);
-					elog("Could not re-allocate memory to store a new level.");
-					return 0;
-				}
-				case levels_occupy_overflow_error:
-					break;
-			}
-		}
-		++l;
-	}
-	SDL_Surface*sur=SDL_CreateRGBSurface(0,maxw,
-		ladder->records[ladder->n_records-1].end_y,32,0xff,0xff00,
+	}while(++i<ladder->n_records);
+	SDL_Surface*sur=SDL_CreateRGBSurface(0,maxw,floor_y,32,0xff,0xff00,
 		0xff0000,0xff000000);
 	if(!sur){
 		esdl;
@@ -755,21 +715,33 @@ struct string**ps){
 		levels_free(ladder);
 		return 0;
 	}
-	levels_free(ladder);
 	l=0;
 	do{
 		SDL_Rect rc={
 			.x=pool->records[l].dst_x,
-			.y=pool->records[l].dst_y,
+			.y=ladder->records[pool->records[l].ladder_level].floor_y,
 			.w=pool->records[l].surface->w,
 			.h=pool->records[l].surface->h
 		};
 		if(SDL_BlitSurface(pool->records[l].surface,NULL,sur,&rc)<0){
 			esdl;
 			string_free(s);
+			levels_free(ladder);
 			return 0;
 		}
+		switch(string_push_snprintf(&s,"[%s]\nx=%i\ny=%i\nw=%i\nh=%i\n",
+			pool->records[l].file_id->data,rc.x,rc.y,rc.w,rc.h)){
+			case string_push_snprintf_ok:
+				break;
+			default:{
+				elog("While creating a texture and a string with data for the INI file.");
+				string_free(s);
+				levels_free(ladder);
+				return 0;
+			}
+		}
 	}while(++l<pool->n_records);
+	levels_free(ladder);
 	ps[0]=s;
 	pt[0]=sur;
 	return 1;
