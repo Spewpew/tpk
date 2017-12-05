@@ -9,6 +9,6 @@ config.h
 config.log
 config.status
 src/.deps/
-src/darc
+src/tpk
 stamp-h1
 *~
