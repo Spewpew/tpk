@@ -1,3 +1,4 @@
+//-*- mode: c; -*-
 #include "config.h"
 #include <SDL.h>
 #include <SDL_image.h>
