@@ -18,11 +18,12 @@ AM_CONDITIONAL([SHADOW], [test x$shadow = xtrue])
 AC_PROG_CC
 PKG_PROG_PKG_CONFIG([0.29.2])
 
-
+AC_CHECK_PROG([GPERF],[gperf],[yes])
+AC_CHECK_PROG([INDENT],[indent],[yes])
+test "$GPERF" != "yes" || test "$INDENT" != "yes" && AC_MSG_ERROR([Some programs are missing])
 # Checks for libraries.
 PKG_CHECK_MODULES([SDL2], [sdl2 >= 2.0.6])
 PKG_CHECK_MODULES([SDL2_IMAGE], [SDL2_image >= 2.0.1])
-
 
 # Checks for header files.
 
