@@ -1,4 +1,17 @@
-//-*- mode: c; -*-
+loe::replace({SET_INI_INT64},{Sint64});
+loe::replace({SET_INI_UINT64},{Uint64});
+loe::replace({SET_INI_ASSERT},{SDL_assert});
+loe::replace({SET_INI_BOOLEAN},{int});
+loe::replace({SET_INI_FALSE},{0});
+loe::replace({SET_INI_TRUE},{1});
+loe::replace({LOE_STACK_MALLOC},{SDL_malloc});
+loe::replace({LOE_STACK_REALLOC},{SDL_realloc});
+loe::replace({LOE_STACK_FREE},{SDL_free});
+loe::replace({LOE_STACK_LOG_CRITICAL_MALLOC_ERROR},{critmalloc(rsz)});
+loe::replace({LOE_STACK_LOG_CRITICAL_REALLOC_ERROR},{critrealloc(rsz)});
+loe::replace({LOE_STACK_LOG_OVERFLOW_ERROR},{clog("Overflow.")});
+loe::replace({LOE_STACK_ASSERT},{SDL_assert});
+loe::eereplace({(\W)memcmp},{"$1SDL_memcmp"});
 #include "config.h"
 #include <SDL.h>
 #include <SDL_image.h>
@@ -18,13 +31,6 @@ SDL_FILE"["TOSTR(SDL_LINE)"]:%s->"fmt,SDL_FUNCTION,##args)
 #define typemax(t) ((t)((t)-1 < 0 ? ((t)1 << (sizeof (t) * 8 - 2)) - 1 + ((t)1 << (sizeof (t) * 8 - 2)) : -1))
 #define critmalloc(sz) clog("Failed to allocate memory(%zu).",sz)
 #define critrealloc(sz) clog("Failed to re-allocate memory(%zu).",sz)
-
-loe::replace({SET_INI_INT64},{Sint64});
-loe::replace({SET_INI_UINT64},{Uint64});
-loe::replace({SET_INI_ASSERT},{SDL_assert});
-loe::replace({SET_INI_BOOLEAN},{int});
-loe::replace({SET_INI_FALSE},{0});
-loe::replace({SET_INI_TRUE},{1});
 
 set::ini_works;
 
@@ -167,14 +173,6 @@ static Uint32 addrol13(const char*data,size_t sz){
 	}
 	return hash;
 }
-
-loe::replace({LOE_STACK_MALLOC},{SDL_malloc});
-loe::replace({LOE_STACK_REALLOC},{SDL_realloc});
-loe::replace({LOE_STACK_FREE},{SDL_free});
-loe::replace({LOE_STACK_LOG_CRITICAL_MALLOC_ERROR},{critmalloc(rsz)});
-loe::replace({LOE_STACK_LOG_CRITICAL_REALLOC_ERROR},{critrealloc(rsz)});
-loe::replace({LOE_STACK_LOG_OVERFLOW_ERROR},{clog("Overflow.")});
-loe::replace({LOE_STACK_ASSERT},{SDL_assert});
 
 loe::stack(files){
 	::index_type{Uint32};
@@ -389,8 +387,6 @@ const void*udata){
 }
 
 static const struct opt_group*opt_in_word_set(register const char*,register size_t);
-
-#define memcmp SDL_memcmp
 
 set::ini_info(opt){
 	empty{
