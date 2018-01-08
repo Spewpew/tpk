@@ -224,6 +224,7 @@ const char*id,size_t idsz,struct blob*path){
 			}
 			)){
 				case files_occupy_ok:
+				case files_occupy_ok_new_pointer:
 					return files_join_record_ok;
 				case files_occupy_overflow_error:{
 					elog("While adding a file record '[%.*s] %.*s'.",(int)idsz,id,(int)path->size-1,path->data);
@@ -288,6 +289,7 @@ const char*id,size_t idsz,const char*path,size_t pathsz){
 					}
 					)){
 						case files_occupy_ok:
+						case files_occupy_ok_new_pointer:
 							return files_join_record_ok;
 						case files_occupy_overflow_error:{
 							SDL_free(ppath);
@@ -582,7 +584,8 @@ const char*text,size_t size){
 	}
 	typeof((*s)->size) l=s[0]->size-1;
 	switch(string_occupy(s,rsz)){
-		case string_occupy_ok:{
+		case string_occupy_ok:
+		case string_occupy_ok_new_pointer:{
 			SDL_memcpy(&(s[0]->data[l]),text,size);
 			s[0]->data[l+size]='\0';
 			return string_push_text_ok;
@@ -616,7 +619,8 @@ const char*fmt,...){
 	va_end(list);
 	typeof(s[0]->size) l=s[0]->size-1;
 	switch(string_occupy(s,len)){
-		case string_occupy_ok:{
+		case string_occupy_ok:
+		case string_occupy_ok_new_pointer:{
 			va_start(list,fmt);
 			SDL_vsnprintf(&(s[0]->data[l]),len+1,fmt,list);
 			va_end(list);
@@ -653,7 +657,8 @@ struct string**ps){
 			.end_x=pool->records[l].surface->w,
 			.end_y=pool->records[l].surface->h
 		})){
-			case levels_occupy_ok:{
+			case levels_occupy_ok:
+			case levels_occupy_ok_new_pointer:{
 				break;
 			}
 			case levels_occupy_critical_realloc_error:{
